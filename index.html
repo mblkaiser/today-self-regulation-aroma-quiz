@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>今日自我調節配方測驗</title>
-  <meta name="description" content="完成 10 題自我覺察，立即產生屬於你的 10 滴精油配方。" />
+  <meta name="description" content="今日自我調節配方測驗與精油配方練習。" />
   <style>
     :root {
       --ink: #193237;
@@ -45,6 +45,7 @@
     .hero p { margin: 0; max-width: 650px; color: #52696b; font-size: 17px; }
     .hero-note { justify-self:end; max-width: 350px; border:1px solid rgba(29,107,104,.14); background: rgba(255,255,255,.62); border-radius: 20px; padding: 18px 20px; box-shadow: 0 12px 35px rgba(29,68,69,.06); }
     .hero-note strong { display:block; margin-bottom:5px; color:var(--teal-dark); }
+    .quiz-started .hero { display:none; }
     .panel { background:var(--card); border:1px solid rgba(255,255,255,.84); border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter: blur(14px); }
     .quiz-panel { padding: clamp(22px, 5vw, 46px); margin: 14px 0 46px; min-height: 560px; }
     .step-meta { display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:13px; margin-bottom:12px; }
@@ -141,7 +142,6 @@
       <div>
         <div class="eyebrow">在高壓之後，找回自己</div>
         <h1>今天的我，<br /><em>需要什麼氣味？</em></h1>
-        <p>完成 10 題「今日自我調節狀態測驗」，立即取得一份屬於你的 10 滴精油配方。這不是找出標準答案，而是練習在壓力裡辨識自己。</p>
       </div>
       <aside class="hero-note">
         <strong>測驗方式</strong>
@@ -212,7 +212,6 @@
       </section>
     </main>
 
-    <footer class="footer"><span>課程活動版｜結果僅供當下自我覺察與配方練習</span><span>主辦：急診｜對象：EMTP</span></footer>
   </div>
 
   <script>
@@ -239,6 +238,18 @@
     const answerLabels = ["完全不像我", "有一點像", "蠻像我", "非常像我"];
     const limitOne = new Set(["檸檬草", "馬鞭草", "檸檬", "佛手柑"]);
     const bridgePool = ["真正薰衣草", "乳香", "甜橙", "阿米香樹", "大西洋雪松", "檜木", "花梨木", "苦橙葉"];
+    const oilCodes = {
+      "檸檬": "A1", "真正薰衣草": "A2", "大西洋雪松": "A3",
+      "甜橙": "B1", "天竺葵": "B2", "岩蘭草": "B3",
+      "佛手柑": "C1", "苦橙葉": "C2", "乳香": "C3",
+      "綠薄荷": "D1", "茉莉": "D2", "阿米香樹": "D3",
+      "澳洲尤加利": "E1", "甜馬鬱蘭": "E2", "安息香": "E3",
+      "山雞椒": "F1", "橙花": "F2", "絲柏": "F3",
+      "檸檬草": "G1", "花梨木": "G2", "西伯利亞冷杉": "G3",
+      "茶樹": "H1", "沉香醇百里香": "H2", "檜木": "H3",
+      "白千層": "I1", "馬鞭草": "I2", "百里香": "I3"
+    };
+    const oilLabel = (name) => `${oilCodes[name] || ""} ${name}`.trim();
 
     let current = -1;
     let answers = Array(questions.length).fill(null);
@@ -357,7 +368,7 @@
         const data = stateData[key];
         return `<div class="score-row"><strong>${data.short}</strong><span class="score-bar"><i style="width:${(scores[key] / 6) * 100}%; background:${data.color}"></i></span><b>${scores[key]}</b></div>`;
       }).join("");
-      $("formula-grid").innerHTML = lastResult.items.map((item) => `<div class="formula-card"><div class="oil-name">${item.name}</div><div class="drops">${item.drops}<small> 滴</small></div></div>`).join("");
+      $("formula-grid").innerHTML = lastResult.items.map((item) => `<div class="formula-card"><div class="oil-name">${oilLabel(item.name)}</div><div class="drops">${item.drops}<small> 滴</small></div></div>`).join("");
       current = questions.length;
       updateProgress();
       showScreen("result");
@@ -367,18 +378,19 @@
       current = -1;
       answers = Array(questions.length).fill(null);
       lastResult = null;
+      document.body.classList.remove("quiz-started");
       updateProgress();
       showScreen("intro");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    $("start-btn").addEventListener("click", () => { current = 0; answers = Array(questions.length).fill(null); renderQuestion(); showScreen("question"); window.scrollTo({ top: 0, behavior: "smooth" }); });
+    $("start-btn").addEventListener("click", () => { document.body.classList.add("quiz-started"); current = 0; answers = Array(questions.length).fill(null); renderQuestion(); showScreen("question"); window.scrollTo({ top: 0, behavior: "smooth" }); });
     $("back-btn").addEventListener("click", () => { if (current > 0) { current -= 1; renderQuestion(); window.scrollTo({ top: 0, behavior: "smooth" }); } });
     $("restart-btn").addEventListener("click", restart);
     $("copy-btn").addEventListener("click", async () => {
       if (!lastResult) return;
       const primaryLabel = lastResult.neutral ? "目前沒有明顯傾向" : stateData[lastResult.primary].name;
       const secondaryLabel = lastResult.neutral ? "平衡探索型" : stateData[lastResult.secondary].name;
-      const result = `我的今日自我調節配方\n狀態：${primaryLabel}\n配方方向：${secondaryLabel}\n${lastResult.items.map((item) => `${item.name}｜${item.drops} 滴`).join("\n")}\n總計：10 滴`;
+      const result = `我的今日自我調節配方\n狀態：${primaryLabel}\n配方方向：${secondaryLabel}\n${lastResult.items.map((item) => `${oilLabel(item.name)}｜${item.drops} 滴`).join("\n")}\n總計：10 滴`;
       try { await navigator.clipboard.writeText(result); $("copy-btn").textContent = "已複製配方 ✓"; setTimeout(() => $("copy-btn").textContent = "複製我的配方", 2200); } catch (e) { window.prompt("請複製以下配方：", result); }
     });
     updateProgress();
